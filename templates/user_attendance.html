@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance for {{ user.name }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        h1 {
+            color: #0b4c61;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #0b4c61;
+            color: white;
+        }
+
+        .btn {
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-weight: bold;
+        }
+
+        .container {
+            margin-top: 40px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-label {
+            font-weight: bold;
+        }
+
+        .text-danger {
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 22px;
+            }
+
+            .btn {
+                font-size: 14px;
+                padding: 8px 12px;
+            }
+
+            table {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <h1 class="text-center">Attendance for {{ user.name }} ({{ user.roll_number }})</h1>
+
+        <!-- Navigation Buttons -->
+        <div class="d-flex justify-content-between mb-4">
+            {% if session['logged_in'] == 'admin' %}
+            <a href="{{ url_for('listusers') }}" class="btn btn-secondary">Back to User List</a>
+            {% endif %}
+
+            {% if session['logged_in'] == 'student' %}
+            <a href="{{ url_for('student_logout') }}" class="btn btn-danger">Logout</a>
+            {% endif %}
+        </div>
+
+        <!-- Date Range Filter Form -->
+        <form method="GET" action="{{ url_for('user_attendance', roll_number=user.roll_number) }}" class="mb-4">
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}">
+                </div>
+                <div class="col-md-5">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Filter</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Attendance Table -->
+        {% if attendance_records %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped mt-4">
+                <thead>
+                    <tr>
+                        <th>S.No.</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in attendance_records %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ record.date }}</td>
+                        <td>{{ record.time }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <!-- No Records Message -->
+        <p class="text-danger text-center">No attendance records found.</p>
+        {% endif %}
+    </div>
+</body>
+
+</html>
