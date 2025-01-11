@@ -1,39 +1,77 @@
 <!doctype html>
 <html lang="en">
 
-<style type='text/css'>
+<style type="text/css">
     * {
         padding: 0;
         margin: 0;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        box-sizing: border-box;
     }
 
     body {
         background-image: url('/static/background.jpeg');
         background-size: cover;
-        font-family: sans-serif;
-        margin-top: 40px;
         height: 100vh;
-        padding: 0;
-        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        padding: 100px 20px 0;
     }
 
     table {
-        border: 1px;
         font-family: arial, sans-serif;
         border-collapse: collapse;
-        width: 86%;
+        width: 100%;
         margin: auto;
     }
 
-    td,
-    th {
+    h1, h2 {
+        text-align: center;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    h1 {
+        color: white;
+        padding: 11px;
+        font-size: 50px;
+    }
+
+    h2 {
+        font-size: 24px;
+        background-color: #0b4c61;
+        color: white;
+        padding: 15px;
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    td, th {
         border: 1px solid black !important;
         padding: 5px;
     }
 
     tr:nth-child(even) {
         background-color: #dddddd;
+    }
+
+    .btn-large {
+        font-size: 24px;
+        font-weight: bold;
+        border-radius: 10px;
+        width: 700px;
+        padding: 10px;
+        margin: 30px auto;
+    }
+
+    .btn-center {
+        font-size: 20px;
+        font-weight: bold;
+        border-radius: 10px;
+        padding: 10px;
+        margin: 20px;
     }
 
     .logout-btn {
@@ -47,6 +85,59 @@
         color: white;
         font-size: 20px;
         padding: 10px;
+    }
+
+    .section {
+        max-width: 1000px;
+        margin: 15px auto;
+        background-color: rgba(211, 211, 211, 0.5);
+        border-radius: 20px;
+        padding: 0px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .attendance-button {
+        font-size: 20px;
+        font-weight: bold;
+        border-radius: 10px;
+        color: white;
+        background-color: rgb(42, 108, 193);
+        padding: 10px;
+        width: 500px;
+        margin: 20px auto;
+        margin-left: 250px;
+        margin-right: 250px;
+    }
+
+    .form-label {
+        font-size: 25px;
+        display: block;
+        margin-bottom: 0px;
+        margin-left: 80px;
+        margin-right: 80px;
+    }
+
+    .form-input {
+        width: 300px;
+        font-size: 20px;
+        margin-bottom: 30px;
+        margin-left: 80px;
+        margin-right: 80px;
+    }
+
+
+
+    .form-button {
+
+        font-size: 20px;
+        font-weight: bold;
+        border-radius: 10px;
+        color:  white;
+        background-color: black;
+        padding: 5px;
+        width: 300px;
+        margin-left: 80px;
+        margin-right: 80px;
     }
 </style>
 
@@ -72,9 +163,9 @@
         </a>
     </div>
 
+    <!-- Title Section -->
     <div class='mt-3 text-center'>
-        <h1 style="width: auto;margin: auto;color: white;padding: 11px;font-size: 44px;">Face Recognition Based
-            Attendance System</h1>
+        <h1>Face Recognition Based Attendance System</h1>
     </div>
 
     <!-- Date and Time Display -->
@@ -93,79 +184,68 @@
         {% endwith %}
     </div>
 
-    <div class="row text-center" style="padding: 20px;margin: 20px;">
-        <div class="col"
-            style="border-radius: 20px;padding: 0px;background-color:rgb(211,211,211,0.5);margin:0px 10px 10px 10px;min-height: 400px;">
-            <h2 style="border-radius: 20px 20px 0px 0px;background-color: #0b4c61;color: white;padding: 10px;">Today's
-                Attendance <i class="material-icons">assignment</i></h2>
-            <a style="text-decoration: none;max-width: 300px;" href="/start">
-                <button
-                    style="font-size: 24px;font-weight: bold;border-radius: 10px;width:490px;padding: 10px;margin-top: 30px;margin-bottom: 30px;"
-                    type='submit' class='btn btn-primary'>Take Attendance <i
-                        class="material-icons">beenhere</i></button>
-            </a>
-            <div
-                style="overflow-y: auto; max-height: 250px; background-color: white; border-radius: 10px; padding: 10px;">
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr>
-                            <th style="border: 1px solid #ddd; padding: 8px;"><b>S No</b></th>
-                            <th style="border: 1px solid #ddd; padding: 8px;"><b>Name</b></th>
-                            <th style="border: 1px solid #ddd; padding: 8px;"><b>Roll No.</b></th>
-                            <th style="border: 1px solid #ddd; padding: 8px;"><b>Time</b></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% if l %}
-                        {% for i in range(l) %}
-                        <tr>
-                            <td style="border: 1px solid #ddd; padding: 8px;">{{ i+1 }}</td>
-                            <td style="border: 1px solid #ddd; padding: 8px;">{{ names[i] }}</td>
-                            <td style="border: 1px solid #ddd; padding: 8px;">{{ rolls[i] }}</td>
-                            <td style="border: 1px solid #ddd; padding: 8px;">{{ times[i] }}</td>
-                        </tr>
-                        {% endfor %}
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    <!-- Toggle Buttons -->
+    <div class="text-center mb-3">
+        <button id="toggleAttendance" class="btn btn-secondary" onclick="toggleView()">Today's Attendance</button>
+        <button id="toggleAddUser" class="btn btn-secondary" onclick="toggleView()" style="display:none;">Add New User</button>
+    </div>
 
-        <div class="col"
-            style="border-radius: 20px;padding: 0px;background-color:rgb(211,211,211,0.5);margin:0px 10px 10px 10px;height: 400px;">
-            <form action='/add' method="POST" enctype="multipart/form-data">
-                <h2 style="border-radius: 20px 20px 0px 0px;background-color: #0b4c61;color: white;padding: 10px;">Add
-                    New User <i class="material-icons">control_point_duplicate</i></h2>
-                <label style="font-size: 20px;"><b>Enter New User Name*</b></label>
-                <br>
-                <input type="text" id="newusername" name="newusername"
-                    style="font-size: 20px;margin-top:10px;margin-bottom:10px;" required>
-                <br>
-                <label style="font-size: 20px;"><b>Enter New User Id*</b></label>
-                <br>
-                <input type="text" id="newusereid" name="newuserid"
-                    style="font-size: 20px;margin-top:10px;margin-bottom:10px;" pattern="[0-9]{4}[A-Za-z]{2}[0-9]{6}"
-                    title="Enter a valid ID in the format 0198CS211108" required>
-                <br>
-                <button style="width: 232px;margin-top: 20px;font-size: 20px;" type="submit" class="btn btn-dark">Add
-                    New User
-                </button>
-                <br>
-                <h5 style="padding: 25px;"><i>Total Users in Database: {{totalreg}}</i></h5>
-            </form>
+    <!-- Today's Attendance Section -->
+    <div id="attendanceSection" class="section">
+        <h2>Today's Attendance <i class="material-icons">assignment</i></h2>
+        <a href="/start">
+            <button class="attendance-button">Take Attendance <i class="material-icons">beenhere</i></button>
+        </a>
+        <div style="overflow-y: auto; max-height: 250px; width: 1000px; background-color: white; border-radius: 10px; padding: 10px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>S No</th>
+                        <th>Name</th>
+                        <th>Roll No.</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if l %}
+                    {% for i in range(l) %}
+                    <tr>
+                        <td>{{ i+1 }}</td>
+                        <td>{{ names[i] }}</td>
+                        <td>{{ rolls[i] }}</td>
+                        <td>{{ times[i] }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
         </div>
     </div>
 
+    <!-- Add New User Section -->
+    <div id="addUserSection" class="section" style="display: none;">
+        <form action='/add' method="POST" enctype="multipart/form-data">
+            <h2>Add New User <i class="material-icons">control_point_duplicate</i></h2>
+            <label class="form-label"><b>Enter New User Name*</b></label>
+            <input type="text" id="newusername" name="newusername" class="form-input" required>
+            <label class="form-label"><b>Enter New User Id*</b></label>
+            <input type="text" id="newusereid" name="newuserid" class="form-input" pattern="[0-9]{4}[A-Za-z]{2}[0-9]{6}"
+                title="Enter a valid ID in the format 0198CS211108" required>
+                <br>
+            <button class="form-button" type="submit">Add New User</button>
+            <h5 class="text-center"><i>Total Users in Database: {{totalreg}}</i></h5>
+        </form>
+    </div>
+
     <!-- List Users Button -->
-    <div class="text-center" style="margin-top: 20px;">
+    <div class="text-center">
         <a href="/listusers">
-            <button style="font-size: 20px;font-weight: bold;border-radius: 10px;padding: 10px;margin: 20px;"
-                class="btn btn-success">List Users<i class="material-icons">group</i></button>
+            <button class="btn btn-success btn-center">List Users<i class="material-icons">group</i></button>
         </a>
     </div>
 
     <script>
-        // Function to update date and time with DD/MM/YYYY format
+        // Function to update date and time
         function updateDateTime() {
             var today = new Date();
             var dd = String(today.getDate()).padStart(2, '0');
@@ -173,15 +253,31 @@
             var yyyy = today.getFullYear();
             var time = today.toLocaleTimeString();
 
-            var formattedDate = dd + '/' + mm + '/' + yyyy;
-            document.getElementById("date-time").innerHTML = "Date: " + formattedDate + " | Time: " + time;
+            document.getElementById("date-time").innerHTML = "Date: " + dd + '/' + mm + '/' + yyyy + " | Time: " + time;
         }
 
-        // Update the date and time every second
-        setInterval(updateDateTime, 1000);
-        updateDateTime();  // Initial call to display immediately
-    </script>
+        setInterval(updateDateTime, 1000); // Update date and time every second
+        updateDateTime();
 
+        function toggleView() {
+            var attendanceSection = document.getElementById("attendanceSection");
+            var addUserSection = document.getElementById("addUserSection");
+            var toggleAttendance = document.getElementById("toggleAttendance");
+            var toggleAddUser = document.getElementById("toggleAddUser");
+
+            if (attendanceSection.style.display === "none") {
+                attendanceSection.style.display = "block";
+                addUserSection.style.display = "none";
+                toggleAttendance.style.display = "none";
+                toggleAddUser.style.display = "inline-block";
+            } else {
+                attendanceSection.style.display = "none";
+                addUserSection.style.display = "block";
+                toggleAttendance.style.display = "inline-block";
+                toggleAddUser.style.display = "none";
+            }
+        }
+    </script>
 </body>
 
 </html>
