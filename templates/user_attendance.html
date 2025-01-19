@@ -82,12 +82,8 @@
         <!-- Header -->
         <h1 class="text-center">Attendance for {{ user.name }} ({{ user.roll_number }})</h1>
 
-        <!-- Navigation Buttons -->
-        <div class="d-flex justify-content-between mb-4">
-            {% if session['logged_in'] == 'admin' %}
-            <a href="{{ url_for('listusers') }}" class="btn btn-secondary">Back to User List</a>
-            {% endif %}
-
+        <!-- Student Logout -->
+        <div class="d-flex justify-content-end mb-4">
             {% if session['logged_in'] == 'student' %}
             <a href="{{ url_for('student_logout') }}" class="btn btn-danger">Logout</a>
             {% endif %}
@@ -135,6 +131,13 @@
         {% else %}
         <!-- No Records Message -->
         <p class="text-danger text-center">No attendance records found.</p>
+        {% endif %}
+    </div>
+    <br>
+    <!-- Navigation Buttons -->
+    <div class="d-flex justify-content-center mb-4">
+        {% if session['logged_in'] == 'admin' %}
+        <a href="{{ url_for('listusers') }}" class="btn btn-secondary">Back to User List</a>
         {% endif %}
     </div>
 </body>
