@@ -4,28 +4,24 @@ import joblib
 import numpy as np
 from datetime import date, datetime
 from sklearn.neighbors import KNeighborsClassifier
+import face_recognition
 from models import User, Attendance, db
 
-# Saving Date today in 2 different formats
 datetoday = date.today().strftime("%d-%m-%Y")
 datetoday2 = date.today().strftime("%d-%B-%Y")
 
-# Initializing VideoCapture object to access WebCam
 face_detector = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 
-# If these directories don't exist, create them
 if not os.path.isdir('static'):
     os.makedirs('static')
 if not os.path.isdir('static/faces'):
     os.makedirs('static/faces')
 
 
-# Get total registered users
 def totalreg():
     return User.query.count()
 
 
-# Extract the face from an image
 def extract_faces(img):
     try:
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -35,30 +31,43 @@ def extract_faces(img):
         return []
 
 
-# Identify face using ML model
+def get_face_embedding(img):
+    rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    encodings = face_recognition.face_encodings(rgb_img)
+    if encodings:
+        return encodings[0]
+    return None
+
+
 def identify_face(facearray):
     model = joblib.load('static/face_recognition_model.pkl')
-    return model.predict(facearray)
+    distances, indices = model.kneighbors([facearray], n_neighbors=1)
+    print("Distance:", distances[0][0])
+    
+    if distances[0][0] > 0.5:  # fine-tune this threshold as needed
+        return ['Unknown']
+    return model.predict([facearray])
 
-# Train the model on all faces available in faces folder
+
 def train_model():
-    faces = []
+    embeddings = []
     labels = []
     users = User.query.all()
     for user in users:
         user_folder = f'static/faces/{user.name}_{user.roll_number}'
         for imgname in os.listdir(user_folder):
-            img = cv2.imread(f'{user_folder}/{imgname}')
-            resized_face = cv2.resize(img, (50, 50))
-            faces.append(resized_face.ravel())
-            labels.append(f'{user.name}_{user.roll_number}')
-    faces = np.array(faces)
-    knn = KNeighborsClassifier(n_neighbors=5)
-    knn.fit(faces, labels)
-    joblib.dump(knn, 'static/face_recognition_model.pkl')
+            img_path = os.path.join(user_folder, imgname)
+            img = cv2.imread(img_path)
+            embedding = get_face_embedding(img)
+            if embedding is not None:
+                embeddings.append(embedding)
+                labels.append(f'{user.name}_{user.roll_number}')
+    if embeddings:
+        knn = KNeighborsClassifier(n_neighbors=3)
+        knn.fit(embeddings, labels)
+        joblib.dump(knn, 'static/face_recognition_model.pkl')
 
 
-# Extract attendance records
 def extract_attendance():
     records = Attendance.query.filter_by(date=datetoday).all()
     rolls = [record.roll_number for record in records]
@@ -68,7 +77,6 @@ def extract_attendance():
     return names, rolls, times, l
 
 
-# Add attendance of a specific user
 def add_attendance(roll_number):
     current_time = datetime.now().strftime("%H:%M:%S")
     if not Attendance.query.filter_by(roll_number=roll_number, date=datetoday).first():
@@ -76,7 +84,7 @@ def add_attendance(roll_number):
         db.session.add(attendance)
         db.session.commit()
 
-# Get all users
+
 def getallusers():
     users = User.query.all()
     names = [user.name for user in users]
@@ -84,18 +92,15 @@ def getallusers():
     l = len(users)
     return users, names, rolls, l
 
-# Delete a user folder and remove from database
+
 def deletefolder(user_id):
     user = User.query.get(user_id)
     if not user:
-        return  # Handle case if user does not exist
-    
+        return
     user_folder = f'static/faces/{user.name}_{user.roll_number}'
     if os.path.isdir(user_folder):
-        pics = os.listdir(user_folder)
-        for pic in pics:
-            os.remove(f'{user_folder}/{pic}')
+        for pic in os.listdir(user_folder):
+            os.remove(os.path.join(user_folder, pic))
         os.rmdir(user_folder)
-    
     db.session.delete(user)
     db.session.commit()

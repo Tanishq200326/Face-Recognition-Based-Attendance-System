@@ -4,7 +4,7 @@ from flask import Flask, request, render_template, flash, redirect, url_for, ses
 from datetime import date, datetime
 import re
 from models import db, User, Attendance
-from utils import totalreg, extract_faces, identify_face, train_model, extract_attendance, add_attendance, getallusers, deletefolder
+from utils import totalreg, extract_faces, get_face_embedding, identify_face, train_model, extract_attendance, add_attendance, getallusers, deletefolder
 
 
 # Defining Flask App
@@ -159,31 +159,44 @@ def start():
     names, rolls, times, l = extract_attendance()
 
     if 'face_recognition_model.pkl' not in os.listdir('static'):
-        return render_template('home.html', names=names, rolls=rolls, times=times, l=l, totalreg=totalreg(), datetoday2=datetoday2, mess='There is no trained model in the static folder. Please add a new face to continue.')
+        return render_template('home.html', names=names, rolls=rolls, times=times, l=l, totalreg=totalreg(), datetoday2=datetoday2, mess='There is no trained model in the static folder.')
 
-    ret = True
-    cap = cv2.VideoCapture(0)
-    while ret:
+    cap = cv2.VideoCapture(1)
+    while True:
         ret, frame = cap.read()
-        if len(extract_faces(frame)) > 0:
-            (x, y, w, h) = extract_faces(frame)[0]
+        if not ret:
+            break
+
+        faces = extract_faces(frame)
+        for (x, y, w, h) in faces:
+            face_img = frame[y:y+h, x:x+w]
+            embedding = get_face_embedding(face_img)
+            if embedding is not None:
+                identified_person = identify_face(embedding)[0]
+                if identified_person == 'Unknown':
+                    text = 'User Not Found'
+                else:
+                    user_name, user_roll = identified_person.split('_')
+                    if User.query.filter_by(name=user_name, roll_number=user_roll).first():
+                        add_attendance(user_roll)
+                        text = f'{identified_person}'
+                    else:
+                        text = 'User Not Found'
+            else:
+                text = 'No Face Detected'
+
             cv2.rectangle(frame, (x, y), (x+w, y+h), (86, 32, 251), 1)
             cv2.rectangle(frame, (x, y), (x+w, y-40), (86, 32, 251), -1)
-            face = cv2.resize(frame[y:y+h, x:x+w], (50, 50))
-            identified_person = identify_face(face.reshape(1, -1))[0]
-            user_name, user_roll = identified_person.split('_')
-            if User.query.filter_by(name=user_name, roll_number=user_roll).first():
-                add_attendance(user_roll)
-            cv2.putText(frame, f'{identified_person}', (x+5, y-5),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+            cv2.putText(frame, text, (x+5, y-5), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+
         cv2.imshow('Attendance', frame)
         if cv2.waitKey(1) == 27:
             break
+
     cap.release()
     cv2.destroyAllWindows()
     names, rolls, times, l = extract_attendance()
     return render_template('home.html', names=names, rolls=rolls, times=times, l=l, totalreg=totalreg(), datetoday2=datetoday2)
-
 
 
 # Route to add a new user
@@ -194,7 +207,6 @@ def add():
     newusername = request.form['newusername']
     newuserid = request.form['newuserid']
 
-    # Validate the user ID format
     if not re.fullmatch(r"[0-9]{4}[A-Za-z]{2}[0-9]{6}", newuserid):
         flash("Invalid User ID format. Please use the format: 0198CS211108.")
         return redirect(url_for('home'))
@@ -212,30 +224,32 @@ def add():
         os.makedirs(userimagefolder)
 
     i, j = 0, 0
-    cap = cv2.VideoCapture(0)
-    while 1:
+    cap = cv2.VideoCapture(2)
+    while True:
         _, frame = cap.read()
         faces = extract_faces(frame)
         for (x, y, w, h) in faces:
             cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 20), 2)
             cv2.putText(frame, f'Images Captured: {i}/{nimgs}', (30, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 20), 2, cv2.LINE_AA)
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 20), 2)
             if j % 5 == 0:
-                name = newusername+'_'+str(i)+'.jpg'
-                cv2.imwrite(userimagefolder+'/'+name, frame[y:y+h, x:x+w])
+                name = newusername + '_' + str(i) + '.jpg'
+                cv2.imwrite(userimagefolder + '/' + name, frame[y:y+h, x:x+w])
                 i += 1
             j += 1
-        if j == nimgs*5:
+        if j == nimgs * 5:
             break
         cv2.imshow('Adding new User', frame)
         if cv2.waitKey(1) == 27:
             break
     cap.release()
     cv2.destroyAllWindows()
-    print('Training Model')
+
     train_model()
+
     names, rolls, times, l = extract_attendance()
     return render_template('home.html', names=names, rolls=rolls, times=times, l=l, totalreg=totalreg(), datetoday2=datetoday2)
+
 
 
 # Route for Admin logout
