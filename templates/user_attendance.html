@@ -106,6 +106,15 @@
             </div>
         </form>
 
+
+        <div class="download-buttons" style="margin-top: 20px;">
+            {% if session['logged_in'] == 'admin' %}
+            <a href="{{ url_for('download_attendance', roll_number=user.roll_number, format='csv', start_date=start_date, end_date=end_date) }}" class="btn btn-primary">Download CSV</a>
+            <a href="{{ url_for('download_attendance', roll_number=user.roll_number, format='excel', start_date=start_date, end_date=end_date) }}" class="btn btn-success">Download Excel</a>
+            {% endif %}
+        </div>
+        
+
         <!-- Attendance Table -->
         {% if attendance_records %}
         <div class="table-responsive">

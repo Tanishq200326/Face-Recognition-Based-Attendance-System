@@ -35,6 +35,65 @@ if not os.path.isdir('static/faces'):
 
 ################## ROUTING FUNCTIONS #########################
 
+import pandas as pd  # Make sure to install: pip install pandas openpyxl
+
+# Route to download attendance for a specific user
+@app.route('/download_attendance/<roll_number>')
+def download_attendance(roll_number):
+    if 'logged_in' not in session:
+        flash("You are not authorized to access this page.")
+        return redirect(url_for('login'))
+
+    format = request.args.get('format', 'csv')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+
+    user = User.query.filter_by(roll_number=roll_number).first()
+    if not user:
+        flash("User not found.")
+        return redirect(url_for('listusers'))
+
+    attendance_records = Attendance.query.filter_by(roll_number=roll_number).all()
+
+    # Filter by date if specified
+    if start_date and end_date:
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+            
+            attendance_records = [
+                record for record in attendance_records
+                if start_dt <= datetime.strptime(record.date, "%d-%m-%Y") <= end_dt
+            ]
+        except ValueError:
+            flash("Invalid date format.")
+            return redirect(url_for('listusers'))
+
+
+    # Prepare DataFrame
+    data = [{
+        'Name': user.name,
+        'Roll Number': user.roll_number,
+        'Date': record.date,
+        'Time': record.time
+    } for record in attendance_records]
+
+    df = pd.DataFrame(data)
+
+    if format == 'excel':
+        excel_path = f'static/Attendance Records/Attendance_{roll_number}.xlsx'
+        output = pd.ExcelWriter(excel_path, engine='openpyxl')
+        df.to_excel(output, index=False, sheet_name='Attendance')
+        output.close()
+        return redirect(f'/{excel_path}')
+    else:
+        csv_path = f'static/Attendance Records/Attendance_{roll_number}.csv'
+        df.to_csv(csv_path, index=False)
+        return redirect(f'/{csv_path}')
+
+
+
+
 # Route to home page
 @app.route('/home')
 def home():
@@ -102,56 +161,54 @@ def login():
 
 
 
-# Route to view attendance of a specific user
 @app.route('/user_attendance/<roll_number>', methods=['GET'])
 def user_attendance(roll_number):
-    # Check if the user is logged in as a student or admin
     if 'logged_in' not in session:
         flash("You are not authorized to access this page.")
-        return redirect(url_for('login'))  # Redirect if not logged in
+        return redirect(url_for('login'))
 
     user_role = session.get('logged_in')
-    
-    # If admin is logged in, they can view any student's attendance
+
+    # Access control
     if user_role == 'admin':
         user = User.query.filter_by(roll_number=roll_number).first()
-        if not user:
-            flash("User not found.")
-            return redirect(url_for('listusers'))
-    
-    # If student is logged in, they can only view their own attendance
-    elif user_role == 'student' and session.get('student_roll') != roll_number:
+    elif user_role == 'student' and session.get('student_roll') == roll_number:
+        user = User.query.filter_by(roll_number=roll_number).first()
+    else:
         flash("You are not authorized to access this page.")
-        return redirect(url_for('login'))  # Redirect if student tries to view someone else's attendance
-    
-    # Fetch user and attendance records for the correct user
-    user = User.query.filter_by(roll_number=roll_number).first()
+        return redirect(url_for('login'))
+
     if not user:
         flash("User not found.")
         return redirect(url_for('listusers'))
 
-    # Get start and end date parameters from the query string
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
 
-    # Fetch all attendance records for the user
     attendance_records = Attendance.query.filter_by(roll_number=roll_number).all()
 
-    # If start and end dates are provided, filter attendance records by date range
     if start_date and end_date:
-    # Convert start and end dates to the Indian format ("%d-%m-%Y")
-        start_date = datetime.strptime(start_date, "%Y-%m-%d").strftime("%d-%m-%Y")
-        end_date = datetime.strptime(end_date, "%Y-%m-%d").strftime("%d-%m-%Y")
+        try:
+            # Convert to datetime objects
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
 
-        # Filter records by the new date format
-        attendance_records = [
-            record for record in attendance_records
-            if datetime.strptime(start_date, "%d-%m-%Y") <= datetime.strptime(record.date, "%d-%m-%Y") <= datetime.strptime(end_date, "%d-%m-%Y")
-        ]
+            # Filter attendance records using the original format in DB
+            attendance_records = [
+                record for record in attendance_records
+                if start_dt <= datetime.strptime(record.date, "%d-%m-%Y") <= end_dt
+            ]
+        except ValueError:
+            flash("Invalid date format.")
+            return redirect(url_for('user_attendance', roll_number=roll_number))
 
-
-    return render_template('user_attendance.html', user=user, attendance_records=attendance_records, start_date=start_date, end_date=end_date)
-
+    return render_template(
+        'user_attendance.html',
+        user=user,
+        attendance_records=attendance_records,
+        start_date=start_date,
+        end_date=end_date
+    )
 
 # Route to start the attendance
 @app.route('/start', methods=['GET'])
