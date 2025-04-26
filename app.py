@@ -218,7 +218,7 @@ def start():
     if 'face_recognition_model.pkl' not in os.listdir('static'):
         return render_template('home.html', names=names, rolls=rolls, times=times, l=l, totalreg=totalreg(), datetoday2=datetoday2, mess='There is no trained model in the static folder.')
 
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(1)   # 0 for built-in camera, 1 for external camera
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -281,7 +281,7 @@ def add():
         os.makedirs(userimagefolder)
 
     i, j = 0, 0
-    cap = cv2.VideoCapture(2)
+    cap = cv2.VideoCapture(2)  # 0 for built-in camera, 2 for external camera
     while True:
         _, frame = cap.read()
         faces = extract_faces(frame)
@@ -322,6 +322,7 @@ def logout():
 def student_logout():
     session.pop('logged_in', None)
     session.pop('student_roll', None)
+    flash('You have been logged out successfully.')
     return redirect(url_for('login'))  # Redirect to login page after student logout
 
 
