@@ -231,14 +231,14 @@ def start():
             if embedding is not None:
                 identified_person = identify_face(embedding)[0]
                 if identified_person == 'Unknown':
-                    text = 'User Not Found'
+                    text = 'Unknown User'
                 else:
                     user_name, user_roll = identified_person.split('_')
                     if User.query.filter_by(name=user_name, roll_number=user_roll).first():
                         add_attendance(user_roll)
                         text = f'{identified_person}'
                     else:
-                        text = 'User Not Found'
+                        text = 'Unknown User'
             else:
                 text = 'No Face Detected'
 
