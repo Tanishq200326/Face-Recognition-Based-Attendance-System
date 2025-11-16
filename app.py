@@ -133,7 +133,7 @@ def deleteuser():
 
 # Predefined admin credentials
 ADMIN_USERNAME = 'admin'
-ADMIN_PASSWORD = 'password123'
+ADMIN_PASSWORD = '**********'
 
 # Route for Admin login
 @app.route('/', methods=['GET', 'POST'])
